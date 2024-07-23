@@ -1,23 +1,29 @@
-use rocket::serde::{Serialize, Deserialize, json::Json};
-use std::env;
+use reqwest::header;
 use reqwest::Client;
 use rocket::http::Status;
-use reqwest::header;
+use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket_db_pools::Connection;
+use std::borrow::BorrowMut;
+use std::env;
 
-
-use crate::db::RunnerDb;
-use crate::db::runner_exists;
+use crate::db::{runner_exists, update_runner_status, RunnerDb, RunnerStatus};
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenResponse {
     token: String,
 }
 
-async fn fetch_github_token(owner: &str, repo: &str, pat: &str) -> Result<TokenResponse, reqwest::Error> {
+async fn fetch_github_token(
+    owner: &str,
+    repo: &str,
+    pat: &str,
+) -> Result<TokenResponse, reqwest::Error> {
     println!("Beginning request");
     let client = Client::new();
-    let url = format!("https://api.github.com/repos/{}/{}/actions/runners/registration-token", owner, repo);
+    let url = format!(
+        "https://api.github.com/repos/{}/{}/actions/runners/registration-token",
+        owner, repo
+    );
     let response = client
         .post(&url)
         .header("Authorization", format!("Bearer {}", pat))
@@ -31,19 +37,10 @@ async fn fetch_github_token(owner: &str, repo: &str, pat: &str) -> Result<TokenR
     Ok(response)
 }
 
-
-async fn update_db_token_issue(runner_id: &str) {
-    eprintln!("PLEASE IMPLEMENT ME :(\n Update token issue for {}", runner_id);
-    return
-}
-
-async fn update_db_token_issue_failed(runner_id: &str) {
-    eprintln!("PLEASE IMPLEMENT ME :(\n Update token issue FAILED for {}", runner_id);
-    return
-}
-
-
-pub async fn runner_return_github_token(mut db: Connection<RunnerDb>, runner: &str) -> Result<Json<TokenResponse>, Status> {
+pub async fn runner_return_github_token(
+    mut db: Connection<RunnerDb>,
+    runner: &str,
+) -> Result<Json<TokenResponse>, Status> {
     dotenv::dotenv().ok();
     let owner = env::var("GITHUB_OWNER").ok();
     let repo = env::var("GITHUB_REPO").ok();
@@ -54,7 +51,7 @@ pub async fn runner_return_github_token(mut db: Connection<RunnerDb>, runner: &s
         return Err(Status::InternalServerError);
     }
 
-    if !runner_exists(db, runner).await {
+    if !runner_exists(&mut db, runner).await {
         eprintln!("Runner not found in database");
         return Err(Status::BadRequest);
     }
@@ -63,13 +60,12 @@ pub async fn runner_return_github_token(mut db: Connection<RunnerDb>, runner: &s
 
     match token {
         Ok(token) => {
-            update_db_token_issue(runner).await;
+            update_runner_status(&mut db, runner, RunnerStatus::IDLE).await;
             Ok(Json(token))
-        },
+        }
         Err(_) => {
-            update_db_token_issue_failed(runner).await;
+            update_runner_status(&mut db, runner, RunnerStatus::ERROR).await;
             Err(Status::InternalServerError)
         }
     }
 }
-

@@ -1,5 +1,6 @@
 mod runners;
 mod db;
+mod reset_task;
 
 
 #[macro_use] extern crate rocket;
@@ -9,8 +10,12 @@ use rocket::http::Status;
 use rocket_db_pools::Connection;
 use rocket_db_pools::Database;
 
+
+
 use crate::db::RunnerDb;
 use crate::runners::{TokenResponse, runner_return_github_token};
+use crate::reset_task::RunnerResetTask;
+
 
 // Runner Endpoint
 #[get("/runner/info")]
@@ -56,10 +61,16 @@ async fn hardware_board_release(board_id: &str) -> &'static str {
 }
 
 
+
+
+
+
+
 #[launch]
 fn rocket() -> _ {
     rocket::build()
         .attach(RunnerDb::init())
+        .attach(RunnerResetTask)
         .mount("/", routes![
                runner_info ,
                runner_registration_token,
