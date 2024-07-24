@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT Status FROM Hardware WHERE Name = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "Status",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "dfab319c4fcb20b1c549e47cf633c7cf578091ef1718505773ff7b0080ead6dd"
+}

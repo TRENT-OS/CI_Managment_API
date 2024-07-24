@@ -3,7 +3,6 @@ use reqwest::Client;
 use rocket::http::Status;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket_db_pools::Connection;
-use std::borrow::BorrowMut;
 use std::env;
 
 use crate::db::{runner_exists, update_runner_status, RunnerDb, RunnerStatus};

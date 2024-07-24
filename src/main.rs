@@ -1,6 +1,7 @@
 mod runners;
 mod db;
 mod reset_task;
+mod hardware;
 
 
 #[macro_use] extern crate rocket;
@@ -61,13 +62,10 @@ async fn hardware_board_release(board_id: &str) -> &'static str {
 }
 
 
-
-
-
-
-
 #[launch]
 fn rocket() -> _ {
+
+    //https://api.rocket.rs/v0.4/rocket_contrib/databases/#provided
     rocket::build()
         .attach(RunnerDb::init())
         .attach(RunnerResetTask)

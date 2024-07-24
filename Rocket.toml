@@ -1,2 +1,5 @@
 [default.databases.runner_db]
 url = "db/runner-managment-api.sqlite"
+
+[default.databases.sqlx]
+url = "db/runner-managment-api.sqlite"
