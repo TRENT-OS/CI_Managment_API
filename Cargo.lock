@@ -3,6 +3,21 @@
 version = 3
 
 [[package]]
+name = "CI_Managment_API"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dotenv",
+ "reqwest",
+ "rocket",
+ "rocket_db_pools",
+ "serde",
+ "sqlx",
+ "strum",
+ "strum_macros",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1775,21 +1790,6 @@ dependencies = [
  "spki",
  "subtle",
  "zeroize",
-]
-
-[[package]]
-name = "runner-managment-api"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dotenv",
- "reqwest",
- "rocket",
- "rocket_db_pools",
- "serde",
- "sqlx",
- "strum",
- "strum_macros",
 ]
 
 [[package]]
