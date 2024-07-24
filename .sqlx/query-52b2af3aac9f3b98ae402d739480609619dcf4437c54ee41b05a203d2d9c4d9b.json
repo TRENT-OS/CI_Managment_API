@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE Hardware SET Status = ?, ClaimedBy = ? WHERE Id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "52b2af3aac9f3b98ae402d739480609619dcf4437c54ee41b05a203d2d9c4d9b"
+}

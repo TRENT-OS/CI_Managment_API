@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT Id, Status, ClaimedBy FROM Hardware",
+  "describe": {
+    "columns": [
+      {
+        "name": "Id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "Status",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "ClaimedBy",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "c21ac7e940fc88da654dbc271dc93361f227bab9a084b4f1254e8b74f23d075c"
+}

@@ -1,10 +1,10 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT Name, Status, ClaimedBy FROM Hardware",
+  "query": "SELECT Id, Status, ClaimedBy FROM Hardware WHERE Id = ?",
   "describe": {
     "columns": [
       {
-        "name": "Name",
+        "name": "Id",
         "ordinal": 0,
         "type_info": "Text"
       },
@@ -16,11 +16,11 @@
       {
         "name": "ClaimedBy",
         "ordinal": 2,
-        "type_info": "Int64"
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       false,
@@ -28,5 +28,5 @@
       true
     ]
   },
-  "hash": "5eb46391a79e3c2983188387816e77a70686aefd430274946aaacb66a28f94a0"
+  "hash": "46a98f4fac11057c886e4394b826d23150b81ebd69de726ea4e64633a9d2883f"
 }

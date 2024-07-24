@@ -1,20 +1,20 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT Status FROM Hardware WHERE Name = ?",
+  "query": "SELECT Id FROM Hardware",
   "describe": {
     "columns": [
       {
-        "name": "Status",
+        "name": "Id",
         "ordinal": 0,
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 0
     },
     "nullable": [
       false
     ]
   },
-  "hash": "dfab319c4fcb20b1c549e47cf633c7cf578091ef1718505773ff7b0080ead6dd"
+  "hash": "15be2b0f324fd592b4b1c5f73b1b64f5b09d3e113a0944d8346d7a8f7e3f0c74"
 }

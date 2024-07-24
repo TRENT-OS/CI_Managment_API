@@ -5,7 +5,7 @@ use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket_db_pools::Connection;
 use std::env;
 
-use crate::db::{runner_exists, update_runner_status, RunnerDb, RunnerStatus};
+use crate::db;
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenResponse {
@@ -37,7 +37,7 @@ async fn fetch_github_token(
 }
 
 pub async fn runner_return_github_token(
-    mut db: Connection<RunnerDb>,
+    mut db: Connection<db::RunnerDb>,
     runner: &str,
 ) -> Result<Json<TokenResponse>, Status> {
     dotenv::dotenv().ok();
@@ -50,7 +50,7 @@ pub async fn runner_return_github_token(
         return Err(Status::InternalServerError);
     }
 
-    if !runner_exists(&mut db, runner).await {
+    if !db::runner_exists(&mut db, runner).await {
         eprintln!("Runner not found in database");
         return Err(Status::BadRequest);
     }
@@ -59,11 +59,11 @@ pub async fn runner_return_github_token(
 
     match token {
         Ok(token) => {
-            update_runner_status(&mut db, runner, RunnerStatus::IDLE).await;
+            db::update_runner_status(&mut db, runner, db::RunnerStatus::IDLE).await;
             Ok(Json(token))
         }
         Err(_) => {
-            update_runner_status(&mut db, runner, RunnerStatus::ERROR).await;
+            db::update_runner_status(&mut db, runner, db::RunnerStatus::ERROR).await;
             Err(Status::InternalServerError)
         }
     }

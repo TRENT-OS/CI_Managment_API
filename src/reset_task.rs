@@ -15,12 +15,12 @@ async fn reset_task(mut db: PoolConnection<Sqlite>) {
         interval.tick().await;
         // Your cleanup logic here
         
-        let data = sqlx::query!("SELECT Name, Status, ClaimedBy FROM Hardware").fetch_all(&mut *db).await.unwrap();
+        let data = sqlx::query!("SELECT Id, Status, ClaimedBy FROM Hardware").fetch_all(&mut *db).await.unwrap();
 
         for rec in data {
             println!(
                 "- {} {} {:?}",
-                rec.Name,
+                rec.Id,
                 rec.Status,
                 rec.ClaimedBy,
             );
