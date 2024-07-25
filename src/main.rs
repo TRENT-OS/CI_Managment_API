@@ -13,13 +13,18 @@ use rocket::{
     Build, Rocket,
 };
 use rocket_db_pools::{sqlx, Connection, Database};
+use rocket_okapi::{openapi, openapi_get_routes, swagger_ui::*};
+
 
 // Runner Endpoint
+#[openapi(tag = "Runner")]
 #[get("/runner/info")]
 async fn runner_info() -> &'static str {
     "Not Implemented"
 }
 
+
+#[openapi(tag = "Runner", ignore = "db")]
 #[get("/runner/<runner_id>/registration-token")]
 async fn runner_registration_token(
     db: Connection<db::RunnerDb>,
@@ -28,17 +33,22 @@ async fn runner_registration_token(
     runners::runner_return_github_token(db, runner_id).await
 }
 
+
+#[openapi(tag = "Runner")]
 #[post("/runner/<runner_id>/launch")]
 async fn runner_launch(runner_id: &str) -> &'static str {
     "Not Implemented"
 }
 
+
+#[openapi(tag = "Runner")]
 #[post("/runner/<runner_id>/reset")]
 async fn runner_reset(runner_id: &str) -> &'static str {
     "Not Implemented"
 }
 
 // Hardware Endpoint
+#[openapi(tag = "Hardware", ignore = "db")]
 #[get("/hardware/info")]
 async fn hardware_info(
     mut db: Connection<db::RunnerDb>,
@@ -46,6 +56,7 @@ async fn hardware_info(
     Ok(Json(hardware::hardware_info(&mut db).await))
 }
 
+#[openapi(tag = "Hardware", ignore = "db")]
 #[get("/hardware/<board_id>/info")]
 async fn hardware_board_info(
     mut db: Connection<db::RunnerDb>,
@@ -58,6 +69,7 @@ async fn hardware_board_info(
     }
 }
 
+#[openapi(tag = "Hardware", ignore = "db")]
 #[get("/hardware/<board_id>/available")]
 async fn hardware_board_available(
     mut db: Connection<db::RunnerDb>,
@@ -69,6 +81,7 @@ async fn hardware_board_available(
     Err(Status::NotFound)
 }
 
+#[openapi(tag = "Hardware", ignore = "db")]
 #[get("/hardware/<board_id>/claim/<runner>")]
 async fn hardware_board_claim(
     mut db: Connection<db::RunnerDb>,
@@ -80,6 +93,7 @@ async fn hardware_board_claim(
         .unwrap_or(Status::InternalServerError);
 }
 
+#[openapi(tag = "Hardware", ignore = "db")]
 #[get("/hardware/<board_id>/release/<runner>")]
 async fn hardware_board_release(
     mut db: Connection<db::RunnerDb>,
@@ -90,6 +104,9 @@ async fn hardware_board_release(
         .await
         .unwrap_or(Status::InternalServerError);
 }
+
+
+// SQLx Migrations
 
 async fn run_migrations(rocket: Rocket<Build>) -> fairing::Result {
     match db::RunnerDb::fetch(&rocket) {
@@ -104,16 +121,16 @@ async fn run_migrations(rocket: Rocket<Build>) -> fairing::Result {
     }
 }
 
+// Launch Rocketttt blazzziinngglyyy fast 🚀🚀🚀
 #[launch]
 async fn rocket() -> _ {
-    //https://api.rocket.rs/v0.4/rocket_contrib/databases/#provided
     rocket::build()
         .attach(db::RunnerDb::init())
         .attach(AdHoc::try_on_ignite("SQLx Migrations", run_migrations))
         .attach(reset_task::RunnerResetTask)
         .mount(
             "/",
-            routes![
+            openapi_get_routes![
                 runner_info,
                 runner_registration_token,
                 runner_launch,
@@ -124,5 +141,12 @@ async fn rocket() -> _ {
                 hardware_board_available,
                 hardware_board_release,
             ],
+        )
+        .mount(
+            "/docs/",
+            make_swagger_ui(&SwaggerUIConfig {
+                url: "../openapi.json".to_owned(),
+                ..Default::default()
+            }),
         )
 }

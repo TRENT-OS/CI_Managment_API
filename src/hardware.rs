@@ -1,10 +1,12 @@
 use anyhow;
 use rocket::{serde::Deserialize, http::Status, serde::Serialize};
 use rocket_db_pools::sqlx::{Connection, SqliteConnection};
+use rocket_okapi::okapi::schemars;
+use rocket_okapi::okapi::schemars::JsonSchema;
 
 use crate::db::{self};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct HardwareInfo {
     pub name: String,
     pub status: db::HardwareStatus,

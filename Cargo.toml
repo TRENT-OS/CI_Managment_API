@@ -11,7 +11,7 @@ serde = { version = "1.0", features = ["derive"] }
 strum = "0.24"
 strum_macros = "0.24"
 anyhow = "1.0.86"
-#sqlx = { version = "0.7", features = ["sqlite", "runtime-tokio-native-tls"] }
+rocket_okapi = { git = "https://github.com/beyera/okapi.git", branch = "beyera/update-rocket-0.5.1", features = [ "swagger", "rapidoc" ] }
 
 [dependencies.sqlx]
 version = "0.7.0"

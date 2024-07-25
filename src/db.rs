@@ -4,6 +4,9 @@ use rocket_db_pools::sqlx::{self, SqliteConnection};
 use rocket_db_pools::Database;
 use serde::Deserialize;
 use std::str::FromStr;
+use rocket_okapi::okapi::schemars;
+use rocket_okapi::okapi::schemars::JsonSchema;
+
 
 use strum_macros::{AsRefStr, EnumString};
 
@@ -13,7 +16,7 @@ use crate::hardware;
 #[database("runner_db")]
 pub struct RunnerDb(sqlx::SqlitePool);
 
-#[derive(Debug, AsRefStr, PartialEq, EnumString, Serialize)]
+#[derive(Debug, AsRefStr, PartialEq, EnumString, Serialize, JsonSchema)]
 pub enum RunnerStatus {
     RESETTING,
     IDLE,
@@ -22,7 +25,7 @@ pub enum RunnerStatus {
     OFFLINE,
 }
 
-#[derive(Debug, AsRefStr, PartialEq, EnumString, Serialize, Deserialize)]
+#[derive(Debug, AsRefStr, PartialEq, EnumString, Serialize, Deserialize, JsonSchema)]
 pub enum HardwareStatus {
     FREE,
     CLAIMED,

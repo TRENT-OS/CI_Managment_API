@@ -3,11 +3,13 @@ use reqwest::Client;
 use rocket::http::Status;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket_db_pools::Connection;
+use rocket_okapi::okapi::schemars;
+use rocket_okapi::okapi::schemars::JsonSchema;
 use std::env;
 
 use crate::db;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, JsonSchema)]
 pub struct TokenResponse {
     token: String,
 }
