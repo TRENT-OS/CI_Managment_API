@@ -1,3 +1,4 @@
+-- Add migration script here
 -- RunnerVMs Table
 CREATE TABLE RunnerVMs (
     Id TEXT PRIMARY KEY NOT NULL,

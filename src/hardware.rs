@@ -1,10 +1,8 @@
-use rocket_db_pools::sqlx::SqliteConnection;
-use rocket::{http::Status, serde::Serialize};
-use serde::Deserialize;
-use anyhow::Result;
+use anyhow;
+use rocket::{serde::Deserialize, http::Status, serde::Serialize};
+use rocket_db_pools::sqlx::{Connection, SqliteConnection};
 
-use crate::db::{self, HardwareStatus};
-
+use crate::db::{self};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct HardwareInfo {
@@ -22,7 +20,6 @@ impl HardwareInfo {
         }
     }
 
-
     pub async fn retrieve(db: &mut SqliteConnection, hardware: &str) -> Option<Self> {
         if !db::hardware_exists(db, hardware).await {
             eprintln!("Hardware does not exist");
@@ -33,19 +30,20 @@ impl HardwareInfo {
     }
 }
 
-
-pub async fn is_hardware_available(db: &mut SqliteConnection, hardware: &str) -> Result<bool> {
+pub async fn is_hardware_available(
+    db: &mut SqliteConnection,
+    hardware: &str,
+) -> anyhow::Result<bool> {
     if !db::hardware_exists(db, hardware).await {
         return Err(anyhow::anyhow!("Hardware does not exist"));
     }
-    return Ok(db::HardwareStatus::CLAIMED != db::get_hardware_status(db, hardware).await)
+    return Ok(db::HardwareStatus::CLAIMED != db::get_hardware_status(db, hardware).await);
 }
 
-pub async fn hardware_info(db: &mut SqliteConnection) -> Vec<HardwareInfo> {   
+pub async fn hardware_info(db: &mut SqliteConnection) -> Vec<HardwareInfo> {
     let boards = db::hardware_board_list(db).await;
 
     println!("Boards: {:?}", boards);
-
 
     let mut hardware_info: Vec<HardwareInfo> = Vec::new();
     for board in boards {
@@ -55,42 +53,48 @@ pub async fn hardware_info(db: &mut SqliteConnection) -> Vec<HardwareInfo> {
                 hwi
             } else {
                 eprintln!("Uhhh something went wrong :(");
-                continue
-            }
+                continue;
+            },
         )
     }
 
     hardware_info
 }
 
+pub async fn claim_hardware(
+    db: &mut SqliteConnection,
+    hardware: &str,
+    runner: &str,
+) -> anyhow::Result<Status> {
+    let mut tx = db.begin().await?;
 
-pub async fn claim_hardware(db: &mut SqliteConnection, hardware: &str, runner: &str) -> Status {
-    if let Ok(available) = is_hardware_available(db, hardware).await {
-        if !available {
-            return Status::Conflict;
-        }        
-    } else {
-        return Status::NotFound;
+    match is_hardware_available(&mut tx, hardware).await {
+        Ok(true) => {}
+        Ok(false) => return Ok(Status::Conflict),
+        Err(_) => return Ok(Status::NotFound),
     }
 
-    match db::update_hardware_status(db, hardware, runner,  db::HardwareStatus::CLAIMED).await {
-        Ok(_) => Status::Ok,
-        Err(_) => Status::InternalServerError,
-    }
+    db::update_hardware_status(&mut tx, hardware, runner, db::HardwareStatus::CLAIMED).await?;
+
+    tx.commit().await?;
+    Ok(Status::Ok)
 }
 
-pub async fn release_hardware(db: &mut SqliteConnection, hardware: &str, runner: &str) -> Status {
-    if let Ok(available) = is_hardware_available(db, hardware).await {
-        if available {
-            return Status::Conflict;
-        }        
-    } else {
-        return Status::NotFound;
-    }
-    
-    match db::update_hardware_status(db, hardware, runner,  db::HardwareStatus::FREE).await {
-        Ok(_) => Status::Ok,
-        Err(_) => Status::InternalServerError,
-    }
-}
+pub async fn release_hardware(
+    db: &mut SqliteConnection,
+    hardware: &str,
+    runner: &str,
+) -> anyhow::Result<Status> {
+    let mut tx = db.begin().await?;
 
+    match is_hardware_available(&mut tx, hardware).await {
+        Ok(false) => {}
+        Ok(true) => return Ok(Status::Conflict),
+        Err(_) => return Ok(Status::NotFound),
+    }
+
+    db::update_hardware_status(&mut tx, hardware, runner, db::HardwareStatus::FREE).await?;
+
+    tx.commit().await?;
+    Ok(Status::Ok)
+}

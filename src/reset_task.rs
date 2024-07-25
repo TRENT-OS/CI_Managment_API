@@ -1,11 +1,13 @@
-use rocket::tokio::time::{interval, Duration};
-use rocket::fairing::{Fairing, Info, Kind};
-use rocket::{Rocket, Build};
-use rocket_db_pools::Database;
-use rocket_db_pools::sqlx::pool::PoolConnection;
-use rocket_db_pools::sqlx::Sqlite;
-use rocket_db_pools::sqlx;
-
+use rocket::{
+    fairing::{Fairing, Info, Kind},
+    tokio::time::{interval, Duration},
+    Build, Rocket,
+};
+use rocket_db_pools::{
+    sqlx,
+    sqlx::{pool::PoolConnection, Sqlite},
+    Database,
+};
 
 use crate::db::RunnerDb;
 
@@ -14,18 +16,15 @@ async fn reset_task(mut db: PoolConnection<Sqlite>) {
     loop {
         interval.tick().await;
         // Your cleanup logic here
-        
-        let data = sqlx::query!("SELECT Id, Status, ClaimedBy FROM Hardware").fetch_all(&mut *db).await.unwrap();
+
+        let data = sqlx::query!("SELECT Id, Status, ClaimedBy FROM Hardware")
+            .fetch_all(&mut *db)
+            .await
+            .unwrap();
 
         for rec in data {
-            println!(
-                "- {} {} {:?}",
-                rec.Id,
-                rec.Status,
-                rec.ClaimedBy,
-            );
+            println!("- {} {} {:?}", rec.Id, rec.Status, rec.ClaimedBy,);
         }
-
 
         println!("Resetting task");
     }
