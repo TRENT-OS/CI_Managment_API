@@ -84,6 +84,7 @@ pub async fn runner_launch(db: &mut SqliteConnection, runner: &str) -> Status {
     db::update_runner_time_to_reset(db, runner, timestamp).await;
     db::update_runner_status(db, runner, db::RunnerStatus::IDLE).await;
 
+    println!("Launching runner {}", runner);
     Status::Ok
 }
 
@@ -100,6 +101,7 @@ pub async fn runner_reset(db: &mut SqliteConnection, runner: &str) -> Status {
 
     vm::reset(runner).await;
 
+    println!("Resetting runner {}", runner);
     Status::Ok
 }
 

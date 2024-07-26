@@ -4,31 +4,42 @@ use rocket::{
     Build, Rocket,
 };
 use rocket_db_pools::{
-    sqlx,
     sqlx::{pool::PoolConnection, Sqlite},
     Database,
 };
+use chrono::Utc;
 
-use crate::db::RunnerDb;
+use crate::{db, runners};
+
+//------------------------------------------------------------------------------
+// Reset Logic
+//------------------------------------------------------------------------------
+
 
 async fn reset_task(mut db: PoolConnection<Sqlite>) {
     let mut interval = interval(Duration::from_secs(30));
     loop {
         interval.tick().await;
-        // Your cleanup logic here
 
-        let data = sqlx::query!("SELECT Id, Status, ClaimedBy FROM Hardware")
-            .fetch_all(&mut *db)
-            .await
-            .unwrap();
+        let runners = runners::runners_info(&mut *db).await;
 
-        for rec in data {
-            println!("- {} {} {:?}", rec.Id, rec.Status, rec.ClaimedBy,);
+        for runner in runners {
+            if let Some(time_to_reset) = runner.time_to_reset {
+                if time_to_reset.unix() < Utc::now().timestamp() {
+                    runners::runner_reset(&mut *db, &runner.name).await;
+                    println!("Force reset of {}", runner.name);
+                }
+            }
         }
-
-        println!("Resetting task");
     }
 }
+
+
+
+//------------------------------------------------------------------------------
+// Fairing Setup
+//------------------------------------------------------------------------------
+
 
 pub struct RunnerResetTask;
 
@@ -42,7 +53,7 @@ impl Fairing for RunnerResetTask {
     }
 
     async fn on_ignite(&self, rocket: Rocket<Build>) -> Result<Rocket<Build>, Rocket<Build>> {
-        let db_pool = match RunnerDb::fetch(&rocket) {
+        let db_pool = match db::RunnerDb::fetch(&rocket) {
             Some(pool) => pool,
             None => {
                 eprintln!("Failed to fetch the database pool");
