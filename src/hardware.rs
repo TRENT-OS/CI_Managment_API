@@ -6,6 +6,13 @@ use rocket_okapi::okapi::schemars::JsonSchema;
 
 use crate::db::{self};
 
+
+
+//------------------------------------------------------------------------------
+// Data Structures
+//------------------------------------------------------------------------------
+
+
 #[derive(Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct HardwareInfo {
     pub name: String,
@@ -32,6 +39,13 @@ impl HardwareInfo {
     }
 }
 
+
+
+//------------------------------------------------------------------------------
+// Hardware Endpoint Logic
+//------------------------------------------------------------------------------
+
+
 pub async fn is_hardware_available(
     db: &mut SqliteConnection,
     hardware: &str,
@@ -41,6 +55,7 @@ pub async fn is_hardware_available(
     }
     return Ok(db::HardwareStatus::CLAIMED != db::get_hardware_status(db, hardware).await);
 }
+
 
 pub async fn hardware_info(db: &mut SqliteConnection) -> Vec<HardwareInfo> {
     let boards = db::hardware_board_list(db).await;
@@ -62,6 +77,7 @@ pub async fn hardware_info(db: &mut SqliteConnection) -> Vec<HardwareInfo> {
 
     hardware_info
 }
+
 
 pub async fn claim_hardware(
     db: &mut SqliteConnection,

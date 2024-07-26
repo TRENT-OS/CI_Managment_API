@@ -2,6 +2,8 @@ mod db;
 mod hardware;
 mod reset_task;
 mod runners;
+mod timestamp;
+mod vm;
 
 #[macro_use]
 extern crate rocket;
@@ -16,11 +18,26 @@ use rocket_db_pools::{sqlx, Connection, Database};
 use rocket_okapi::{openapi, openapi_get_routes, swagger_ui::*};
 
 
-// Runner Endpoint
-#[openapi(tag = "Runner")]
+
+//------------------------------------------------------------------------------
+// Runner
+//------------------------------------------------------------------------------
+
+
+#[openapi(tag = "Runner", ignore="db")]
 #[get("/runner/info")]
-async fn runner_info() -> &'static str {
-    "Not Implemented"
+async fn runners_info(mut db: Connection<db::RunnerDb>) -> Result<Json<Vec<runners::RunnerInfo>>, Status> {
+    Ok(Json(runners::runners_info(&mut db).await))
+}
+
+
+#[openapi(tag = "Runner", ignore = "db")]
+#[get("/runner/<runner_id>/info")]
+async fn runner_info(mut db: Connection<db::RunnerDb>, runner_id: &str,) -> Result<Json<runners::RunnerInfo>, Status> {
+    match runners::runner_info(&mut db, runner_id).await {
+        Some(info) => Ok(Json(info)),
+        None => Err(Status::NotFound),
+    }
 }
 
 
@@ -34,20 +51,26 @@ async fn runner_registration_token(
 }
 
 
-#[openapi(tag = "Runner")]
+#[openapi(tag = "Runner", ignore = "db")]
 #[post("/runner/<runner_id>/launch")]
-async fn runner_launch(runner_id: &str) -> &'static str {
-    "Not Implemented"
+async fn runner_launch(mut db: Connection<db::RunnerDb>, runner_id: &str) -> Status {
+    runners::runner_launch(&mut db, runner_id).await
 }
 
 
-#[openapi(tag = "Runner")]
+#[openapi(tag = "Runner", ignore = "db")]
 #[post("/runner/<runner_id>/reset")]
-async fn runner_reset(runner_id: &str) -> &'static str {
-    "Not Implemented"
+async fn runner_reset(mut db: Connection<db::RunnerDb>, runner_id: &str) -> Status {
+    runners::runner_reset(&mut db, runner_id).await
 }
 
-// Hardware Endpoint
+
+
+//------------------------------------------------------------------------------
+// Hardware
+//------------------------------------------------------------------------------
+
+
 #[openapi(tag = "Hardware", ignore = "db")]
 #[get("/hardware/info")]
 async fn hardware_info(
@@ -106,7 +129,11 @@ async fn hardware_board_release(
 }
 
 
-// SQLx Migrations
+
+//------------------------------------------------------------------------------
+// Sqlx Migrations
+//------------------------------------------------------------------------------
+
 
 async fn run_migrations(rocket: Rocket<Build>) -> fairing::Result {
     match db::RunnerDb::fetch(&rocket) {
@@ -121,7 +148,13 @@ async fn run_migrations(rocket: Rocket<Build>) -> fairing::Result {
     }
 }
 
+
+
+//------------------------------------------------------------------------------
 // Launch Rocketttt blazzziinngglyyy fast 🚀🚀🚀
+//------------------------------------------------------------------------------
+
+
 #[launch]
 async fn rocket() -> _ {
     rocket::build()
@@ -132,6 +165,7 @@ async fn rocket() -> _ {
             "/",
             openapi_get_routes![
                 runner_info,
+                runners_info,
                 runner_registration_token,
                 runner_launch,
                 runner_reset,

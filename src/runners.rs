@@ -2,16 +2,105 @@ use reqwest::header;
 use reqwest::Client;
 use rocket::http::Status;
 use rocket::serde::{json::Json, Deserialize, Serialize};
-use rocket_db_pools::Connection;
+use rocket_db_pools::{Connection, sqlx::SqliteConnection};
+
 use rocket_okapi::okapi::schemars;
 use rocket_okapi::okapi::schemars::JsonSchema;
 use std::env;
 
-use crate::db;
+
+use crate::{db, timestamp, vm};
+
+
+
+
+//------------------------------------------------------------------------------
+// Data Structures
+//------------------------------------------------------------------------------
+
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct RunnerInfo {
+    pub name: String,
+    pub status: db::RunnerStatus,
+    pub time_to_reset: Option<timestamp::Timestamp>,
+}
+
+impl RunnerInfo {
+    pub fn new(name: String, status: db::RunnerStatus, time_to_reset: Option<timestamp::Timestamp>) -> Self {
+        Self {
+            name,
+            status,
+            time_to_reset,
+        }
+    }
+
+    pub async fn retrieve(db: &mut SqliteConnection, runner: &str) -> Option<Self> {
+        if !db::runner_exists(db, runner).await {
+            eprintln!("Runner does not exist");
+            return None;
+        }
+
+        Some(db::get_runner_info(db, runner).await)
+    }
+}
+
 
 #[derive(Serialize, Deserialize, JsonSchema)]
 pub struct TokenResponse {
     token: String,
+}
+
+//------------------------------------------------------------------------------
+// Runner Endpoint Logic
+//------------------------------------------------------------------------------
+
+
+pub async fn runner_info(db: &mut SqliteConnection, runner: &str) -> Option<RunnerInfo> {
+    RunnerInfo::retrieve(db, runner).await
+} 
+
+pub async fn runners_info(mut db: &mut SqliteConnection) -> Vec<RunnerInfo> {
+    let runners = db::runner_id_list(&mut db).await;
+
+
+    let mut runner_info: Vec<RunnerInfo> = Vec::new();
+    for runner in runners {
+        let info = RunnerInfo::retrieve(&mut db, &runner).await;
+        if let Some(info) = info {
+            runner_info.push(info);
+        }
+    }
+    runner_info
+}
+
+pub async fn runner_launch(db: &mut SqliteConnection, runner: &str) -> Status {
+    if !db::runner_exists(db, runner).await {
+        eprintln!("Runner does not exist");
+        return Status::NotFound;
+    }
+
+    let timestamp = timestamp::Timestamp::new().chrono();
+    db::update_runner_time_to_reset(db, runner, timestamp).await;
+    db::update_runner_status(db, runner, db::RunnerStatus::IDLE).await;
+
+    Status::Ok
+}
+
+
+pub async fn runner_reset(db: &mut SqliteConnection, runner: &str) -> Status {
+    if !db::runner_exists(db, runner).await {
+        eprintln!("Runner does not exist");
+        return Status::NotFound;
+    }
+
+    let timestamp = None;
+    db::update_runner_time_to_reset(db, runner, timestamp).await;
+    db::update_runner_status(db, runner, db::RunnerStatus::RESETTING).await;
+
+    vm::reset(runner).await;
+
+    Status::Ok
 }
 
 async fn fetch_github_token(
@@ -37,6 +126,7 @@ async fn fetch_github_token(
 
     Ok(response)
 }
+
 
 pub async fn runner_return_github_token(
     mut db: Connection<db::RunnerDb>,

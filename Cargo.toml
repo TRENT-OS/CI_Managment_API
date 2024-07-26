@@ -11,12 +11,13 @@ serde = { version = "1.0", features = ["derive"] }
 strum = "0.24"
 strum_macros = "0.24"
 anyhow = "1.0.86"
+chrono = { version = "0.4", features = ["serde", "alloc"] }
 rocket_okapi = { git = "https://github.com/beyera/okapi.git", branch = "beyera/update-rocket-0.5.1", features = [ "swagger", "rapidoc" ] }
 
 [dependencies.sqlx]
 version = "0.7.0"
 default-features = false
-features = ["macros", "migrate"]
+features = ["macros", "migrate", "chrono"]
 
 
 [dependencies.rocket_db_pools]

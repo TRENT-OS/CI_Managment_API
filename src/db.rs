@@ -10,13 +10,18 @@ use rocket_okapi::okapi::schemars::JsonSchema;
 
 use strum_macros::{AsRefStr, EnumString};
 
-use crate::hardware;
+use crate::{hardware, runners, timestamp};
+
+//------------------------------------------------------------------------------
+// Data Structures
+//------------------------------------------------------------------------------
+
 
 #[derive(Database)]
 #[database("runner_db")]
 pub struct RunnerDb(sqlx::SqlitePool);
 
-#[derive(Debug, AsRefStr, PartialEq, EnumString, Serialize, JsonSchema)]
+#[derive(Debug, AsRefStr, PartialEq, EnumString, Serialize, Deserialize, JsonSchema)]
 pub enum RunnerStatus {
     RESETTING,
     IDLE,
@@ -33,7 +38,13 @@ pub enum HardwareStatus {
     ERROR,
 }
 
+
+
+//------------------------------------------------------------------------------
 // Runner
+//------------------------------------------------------------------------------
+
+
 pub async fn runner_exists(db: &mut SqliteConnection, runner: &str) -> bool {
     1 == sqlx::query_as::<_, (i64,)>("SELECT EXISTS (SELECT 1 FROM RunnerVMs WHERE Id = ?)")
         .bind(runner)
@@ -52,7 +63,61 @@ pub async fn update_runner_status(db: &mut SqliteConnection, runner: &str, statu
         .unwrap();
 }
 
+pub async fn update_runner_time_to_reset(
+    db: &mut SqliteConnection,
+    runner: &str,
+    time_to_reset: Option<chrono::NaiveDateTime>,
+) {
+    sqlx::query("UPDATE RunnerVMs SET TimeToReset = ? WHERE Id = ?")
+        .bind(time_to_reset)
+        .bind(runner)
+        .execute(db)
+        .await
+        .unwrap();
+}
+
+
+pub async fn runner_id_list(db: &mut SqliteConnection) -> Vec<String> {
+    sqlx::query!("SELECT Id FROM RunnerVMs")
+        .fetch_all(&mut *db)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|rec| rec.Id)
+        .collect()
+}
+
+
+pub async fn get_runner_info(
+    db: &mut SqliteConnection,
+    runner: &str,
+) -> runners::RunnerInfo {
+    let data = sqlx::query!(
+        "SELECT Id, Status, TimeToReset FROM RunnerVMs WHERE Id = ?",
+        runner
+    )
+    .fetch_one(db)
+    .await
+    .unwrap();
+
+    let runner_status = RunnerStatus::from_str(&data.Status)
+        .expect("Invalid Hardware Status: Database Corruption");
+    let timestamp = if let Some(t) = data.TimeToReset {
+        Some(timestamp::Timestamp::from(t))
+    } else {
+        None
+    };
+    runners::RunnerInfo::new(data.Id, runner_status, timestamp)
+}
+
+
+
+
+//------------------------------------------------------------------------------
 // Hardware
+//------------------------------------------------------------------------------
+
+
 pub async fn hardware_exists(db: &mut SqliteConnection, hardware: &str) -> bool {
     1 == sqlx::query_as::<_, (i64,)>("SELECT EXISTS (SELECT 1 FROM Hardware WHERE Id = ?)")
         .bind(hardware)

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT Id FROM RunnerVMs",
+  "describe": {
+    "columns": [
+      {
+        "name": "Id",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c595340c32ab2051c9eadc1046e3e92b72d668f6a4aa463ef2e82fdc1a40a5df"
+}

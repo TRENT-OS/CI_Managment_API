@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT Id, Status, TimeToReset FROM RunnerVMs WHERE Id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "Id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "Status",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "TimeToReset",
+        "ordinal": 2,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "2f7ca9b68853947822851ed7da39475aa61a770c41ee29cd0b3a00ba783aa724"
+}
