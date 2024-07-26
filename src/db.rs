@@ -136,6 +136,22 @@ pub async fn get_hardware_status(db: &mut SqliteConnection, hardware: &str) -> H
     HardwareStatus::from_str(&a).expect("Invalid HardwareStatus in database: Database corruption")
 }
 
+pub async fn get_hardware_claimed_by_runner(
+    db: &mut SqliteConnection,
+    runner: &str,
+) -> Vec<String> {
+    sqlx::query!(
+        "SELECT Id FROM Hardware WHERE ClaimedBy = ?",
+        runner
+    )
+    .fetch_all(db)
+    .await
+    .unwrap()
+    .into_iter()
+    .map(|rec| rec.Id)
+    .collect()
+}
+
 pub async fn update_hardware_status(
     db: &mut SqliteConnection,
     hardware: &str,

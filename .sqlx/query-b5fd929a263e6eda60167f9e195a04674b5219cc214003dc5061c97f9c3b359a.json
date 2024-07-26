@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT Id FROM Hardware WHERE ClaimedBy = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "Id",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b5fd929a263e6eda60167f9e195a04674b5219cc214003dc5061c97f9c3b359a"
+}

@@ -9,6 +9,7 @@ use rocket_okapi::okapi::schemars::JsonSchema;
 use std::env;
 
 
+use crate::hardware;
 use crate::{db, timestamp, vm};
 
 
@@ -89,6 +90,15 @@ pub async fn runner_launch(db: &mut SqliteConnection, runner: &str) -> Status {
 }
 
 
+async fn release_hardware(db: &mut SqliteConnection, runner: &str) {
+    let claimed_hw = db::get_hardware_claimed_by_runner(db, runner).await;
+
+    for hardware in claimed_hw {
+        let _ = hardware::release_hardware(db, &hardware, runner).await; // Ignore result
+    }
+}
+
+
 pub async fn runner_reset(db: &mut SqliteConnection, runner: &str) -> Status {
     if !db::runner_exists(db, runner).await {
         eprintln!("Runner does not exist");
@@ -99,11 +109,13 @@ pub async fn runner_reset(db: &mut SqliteConnection, runner: &str) -> Status {
     db::update_runner_time_to_reset(db, runner, timestamp).await;
     db::update_runner_status(db, runner, db::RunnerStatus::RESETTING).await;
 
+    release_hardware(db, runner).await; // release all hardware claimed by runner
     vm::reset(runner).await;
 
     println!("Resetting runner {}", runner);
     Status::Ok
 }
+
 
 async fn fetch_github_token(
     owner: &str,
