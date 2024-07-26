@@ -105,7 +105,7 @@ async fn hardware_board_available(
 }
 
 #[openapi(tag = "Hardware", ignore = "db")]
-#[get("/hardware/<board_id>/claim/<runner>")]
+#[post("/hardware/<board_id>/claim/<runner>")]
 async fn hardware_board_claim(
     mut db: Connection<db::RunnerDb>,
     board_id: &str,
@@ -117,7 +117,7 @@ async fn hardware_board_claim(
 }
 
 #[openapi(tag = "Hardware", ignore = "db")]
-#[get("/hardware/<board_id>/release/<runner>")]
+#[post("/hardware/<board_id>/release/<runner>")]
 async fn hardware_board_release(
     mut db: Connection<db::RunnerDb>,
     board_id: &str,
