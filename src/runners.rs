@@ -1,11 +1,9 @@
-use reqwest::header;
-use reqwest::Client;
+use reqwest::{header, Client, Proxy};
 use rocket::http::Status;
 use rocket::serde::{json::Json, Deserialize, Serialize};
 use rocket_db_pools::{Connection, sqlx::SqliteConnection};
 
-use rocket_okapi::okapi::schemars;
-use rocket_okapi::okapi::schemars::JsonSchema;
+use rocket_okapi::okapi::{schemars, schemars::JsonSchema};
 use std::env;
 
 
@@ -121,9 +119,14 @@ async fn fetch_github_token(
     owner: &str,
     repo: &str,
     pat: &str,
+    proxy: &str,
 ) -> Result<TokenResponse, reqwest::Error> {
     println!("Beginning request");
-    let client = Client::new();
+
+    let client = Client::builder()
+        .proxy(Proxy::https(proxy)?)
+        .build()?;
+
     let url = format!(
         "https://api.github.com/repos/{}/{}/actions/runners/registration-token",
         owner, repo
@@ -150,8 +153,9 @@ pub async fn runner_return_github_token(
     let owner = env::var("GITHUB_OWNER").ok();
     let repo = env::var("GITHUB_REPO").ok();
     let pat = env::var("GITHUB_PAT").ok();
+    let proxy = env::var("PROXY_URL").ok();
 
-    if owner.is_none() || repo.is_none() || pat.is_none() {
+    if owner.is_none() || repo.is_none() || pat.is_none() || proxy.is_none() {
         eprintln!("Missing required environment variables");
         return Err(Status::InternalServerError);
     }
@@ -161,7 +165,7 @@ pub async fn runner_return_github_token(
         return Err(Status::BadRequest);
     }
 
-    let token = fetch_github_token(&owner.unwrap(), &repo.unwrap(), &pat.unwrap()).await;
+    let token = fetch_github_token(&owner.unwrap(), &repo.unwrap(), &pat.unwrap(), &proxy.unwrap()).await;
 
     match token {
         Ok(token) => {

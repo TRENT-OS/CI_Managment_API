@@ -1,8 +1,7 @@
 use chrono::{DateTime, Utc};
 use std::{env, sync::LazyLock};
 use rocket::serde::{Deserialize, Serialize};
-use rocket_okapi::okapi::schemars;
-use rocket_okapi::okapi::schemars::JsonSchema;
+use rocket_okapi::okapi::{schemars, schemars::JsonSchema};
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct Timestamp {
@@ -45,7 +44,6 @@ impl Timestamp {
             time_str:  dt.to_rfc3339(),
         }
     }
-
 
     pub fn from_unix(timestamp: i64) -> Self {
         Self {

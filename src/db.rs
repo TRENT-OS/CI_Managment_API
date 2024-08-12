@@ -1,11 +1,8 @@
 use anyhow::Result;
-use rocket::serde::Serialize;
-use rocket_db_pools::sqlx::{self, SqliteConnection};
-use rocket_db_pools::Database;
-use serde::Deserialize;
+use rocket::serde::{Serialize, Deserialize};
+use rocket_db_pools::{sqlx::{self, SqliteConnection}, Database};
 use std::str::FromStr;
-use rocket_okapi::okapi::schemars;
-use rocket_okapi::okapi::schemars::JsonSchema;
+use rocket_okapi::okapi::{schemars, schemars::JsonSchema};
 
 
 use strum_macros::{AsRefStr, EnumString};
