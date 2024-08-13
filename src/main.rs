@@ -58,12 +58,33 @@ async fn runner_launch(mut db: Connection<db::RunnerDb>, runner_id: &str) -> Sta
 }
 
 
+// VM Control functions
 #[openapi(tag = "Runner", ignore = "db")]
-#[post("/runner/<runner_id>/reset")]
-async fn runner_reset(mut db: Connection<db::RunnerDb>, runner_id: &str) -> Status {
+#[post("/runner/<runner_id>/vm/reset")]
+async fn runner_vm_reset(mut db: Connection<db::RunnerDb>, runner_id: &str) -> Status {
     runners::runner_reset(&mut db, runner_id).await
 }
 
+
+#[openapi(tag = "Runner", ignore = "db")]
+#[post("/runner/<runner_id>/vm/snapshot")]
+async fn runner_vm_snapshot(db: Connection<db::RunnerDb>, runner_id: &str) -> Status {
+    runners::vm_snapshot(db, runner_id).await
+}
+
+
+#[openapi(tag = "Runner", ignore = "db")]
+#[post("/runner/<runner_id>/vm/start")]
+async fn runner_vm_start(mut db: Connection<db::RunnerDb>, runner_id: &str) -> Status {
+    runners::vm_start(&mut db, &runner_id).await
+}
+
+
+#[openapi(tag = "Runner", ignore = "db")]
+#[post("/runner/<runner_id>/vm/stop")]
+async fn runner_vm_stop(mut db: Connection<db::RunnerDb>, runner_id: &str) -> Status {
+    runners::vm_stop(&mut db, runner_id).await
+}
 
 
 //------------------------------------------------------------------------------
@@ -79,6 +100,7 @@ async fn hardware_info(
     Ok(Json(hardware::hardware_info(&mut db).await))
 }
 
+
 #[openapi(tag = "Hardware", ignore = "db")]
 #[get("/hardware/<board_id>/info")]
 async fn hardware_board_info(
@@ -92,6 +114,7 @@ async fn hardware_board_info(
     }
 }
 
+
 #[openapi(tag = "Hardware", ignore = "db")]
 #[get("/hardware/<board_id>/available")]
 async fn hardware_board_available(
@@ -104,6 +127,7 @@ async fn hardware_board_available(
     Err(Status::NotFound)
 }
 
+
 #[openapi(tag = "Hardware", ignore = "db")]
 #[post("/hardware/<board_id>/claim/<runner>")]
 async fn hardware_board_claim(
@@ -115,6 +139,7 @@ async fn hardware_board_claim(
         .await
         .unwrap_or(Status::InternalServerError);
 }
+
 
 #[openapi(tag = "Hardware", ignore = "db")]
 #[post("/hardware/<board_id>/release/<runner>")]
@@ -168,7 +193,10 @@ async fn rocket() -> _ {
                 runners_info,
                 runner_registration_token,
                 runner_launch,
-                runner_reset,
+                runner_vm_reset,
+                runner_vm_snapshot,
+                runner_vm_start,
+                runner_vm_stop,
                 hardware_info,
                 hardware_board_info,
                 hardware_board_claim,

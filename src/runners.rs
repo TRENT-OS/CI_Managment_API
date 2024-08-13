@@ -11,8 +11,6 @@ use crate::hardware;
 use crate::{db, timestamp, vm};
 
 
-
-
 //------------------------------------------------------------------------------
 // Data Structures
 //------------------------------------------------------------------------------
@@ -177,4 +175,55 @@ pub async fn runner_return_github_token(
             Err(Status::InternalServerError)
         }
     }
+}
+
+
+pub async fn vm_snapshot(mut db: Connection<db::RunnerDb>, runner: &str) -> Status {
+    if !db::runner_exists(&mut db, runner).await {
+        eprintln!("Runner does not exist");
+        return Status::NotFound;
+    }
+
+    let runner = runner.to_string(); // required due to spawn closure
+
+    rocket::tokio::spawn(async move {
+        db::update_runner_status(&mut db, &runner, db::RunnerStatus::RESETTING).await;
+
+        vm::snapshot(&runner).await;
+        println!("Snapshotting runner {}", runner);
+
+        std::thread::sleep(std::time::Duration::from_secs(20));
+    
+        runner_reset(&mut db, &runner).await;
+    });
+
+    return Status::Ok;
+}
+
+
+pub async fn vm_start(db: &mut SqliteConnection, runner: &str) -> Status {
+    if !db::runner_exists(db, runner).await {
+        eprintln!("Runner does not exist");
+        return Status::NotFound;
+    }
+
+    db::update_runner_status(db, runner, db::RunnerStatus::RUNNING).await;
+    vm::start(runner).await;
+    println!("Starting runner vm {}", runner);
+
+    Status::Ok
+}
+
+
+pub async fn vm_stop(db: &mut SqliteConnection, runner: &str) -> Status {
+    if !db::runner_exists(db, runner).await {
+        eprintln!("Runner does not exist");
+        return Status::NotFound;
+    }
+
+    db::update_runner_status(db, runner, db::RunnerStatus::OFFLINE).await;
+    vm::stop(runner).await;
+    println!("Stopping runner vm {}", runner);
+
+    Status::Ok
 }

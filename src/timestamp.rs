@@ -3,11 +3,12 @@ use std::{env, sync::LazyLock};
 use rocket::serde::{Deserialize, Serialize};
 use rocket_okapi::okapi::{schemars, schemars::JsonSchema};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
-pub struct Timestamp {
-    timestamp: i64,
-    time_str: String,
-}
+
+
+//------------------------------------------------------------------------------
+// Config
+//------------------------------------------------------------------------------
+
 
 static VALIDITY: LazyLock<i64> = LazyLock::new(|| {
     let input = env::var("RUNNER_VALIDITY").unwrap_or("60min".to_string());
@@ -26,6 +27,19 @@ static VALIDITY: LazyLock<i64> = LazyLock::new(|| {
         validity
     }
 });
+
+
+
+//------------------------------------------------------------------------------
+// Data Structures
+//------------------------------------------------------------------------------
+
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct Timestamp {
+    timestamp: i64,
+    time_str: String,
+}
 
 
 impl Timestamp {
