@@ -1,6 +1,6 @@
 use reqwest::{header, Client, Proxy};
 use rocket::http::Status;
-use rocket::serde::{json::Json, Deserialize, Serialize};
+use rocket::serde::{Deserialize, Serialize};
 use rocket_db_pools::{Connection, sqlx::SqliteConnection};
 
 use rocket_okapi::okapi::{schemars, schemars::JsonSchema};
@@ -146,7 +146,7 @@ async fn fetch_github_token(
 pub async fn runner_return_github_token(
     mut db: Connection<db::RunnerDb>,
     runner: &str,
-) -> Result<Json<TokenResponse>, Status> {
+) -> Result<String, Status> {
     dotenv::dotenv().ok();
     let owner = env::var("GITHUB_OWNER").ok();
     let repo = env::var("GITHUB_REPO").ok();
@@ -168,7 +168,7 @@ pub async fn runner_return_github_token(
     match token {
         Ok(token) => {
             db::update_runner_status(&mut db, runner, db::RunnerStatus::IDLE).await;
-            Ok(Json(token))
+            Ok(token.token)
         }
         Err(_) => {
             db::update_runner_status(&mut db, runner, db::RunnerStatus::ERROR).await;

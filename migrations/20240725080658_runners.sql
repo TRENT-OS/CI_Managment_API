@@ -22,5 +22,11 @@ INSERT INTO RunnerVMs (ID, Status, TimeToReset) VALUES
 
 -- Hardware
 INSERT INTO Hardware (ID, Status, ClaimedBy) VALUES
-('Rpi4', 'FREE', NULL),
-('Rpi3', 'FREE', NULL);
+('rpi4', 'FREE', NULL),
+('rpi3', 'FREE', NULL),
+('nitrogen6sx', 'FREE', NULL),
+('sabre', 'FREE', NULL),
+('odroidc2', 'FREE', NULL);
+--('jetson-nano-2gb-dev-kit', 'FREE', NULL),
+--('jetson-tx2-nx-a206', 'FREE', NULL),
+--('jetson-xavier-nx-dev-kit', 'FREE', NULL),

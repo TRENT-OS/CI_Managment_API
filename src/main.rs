@@ -46,7 +46,7 @@ async fn runner_info(mut db: Connection<db::RunnerDb>, runner_id: &str,) -> Resu
 async fn runner_registration_token(
     db: Connection<db::RunnerDb>,
     runner_id: &str,
-) -> Result<Json<runners::TokenResponse>, Status> {
+) -> Result<String, Status> {
     runners::runner_return_github_token(db, runner_id).await
 }
 
