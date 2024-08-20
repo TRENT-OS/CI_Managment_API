@@ -17,8 +17,8 @@ CREATE TABLE Hardware (
 
 -- Runners
 INSERT INTO RunnerVMs (ID, Status, TimeToReset) VALUES
-('Runner1', 'RESETTING', NULL),
-('Runner2', 'IDLE', NULL);
+('ulmc-trnt-app02', 'RESETTING', NULL);
+--('ulmc-trnt-app03', 'IDLE', NULL);
 
 -- Hardware
 INSERT INTO Hardware (ID, Status, ClaimedBy) VALUES

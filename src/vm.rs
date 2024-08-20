@@ -24,11 +24,12 @@ static COMMAND_DIR: LazyLock<String> = LazyLock::new(|| {
 
 
 #[derive(Debug, AsRefStr)]
+#[allow(non_camel_case_types)]
 pub enum Command {
-    Start,
-    Stop,
-    Snapshot,
-    Reset,
+    start,
+    stop,
+    createsnap,
+    revert,
 }
 
 
@@ -66,18 +67,18 @@ pub fn exec_command(vm: &str, command: Command) {
 }
 
 pub async fn start(runner: &str) {
-    exec_command(runner, Command::Start);
+    exec_command(runner, Command::start);
 }
 
 
 pub async fn stop(runner: &str) {
-    exec_command(runner, Command::Stop);
+    exec_command(runner, Command::stop);
 }
 
 pub async fn snapshot(runner: &str) {
-    exec_command(runner, Command::Snapshot);
+    exec_command(runner, Command::createsnap);
 }
 
 pub async fn reset(runner: &str) {
-    exec_command(runner, Command::Reset);
+    exec_command(runner, Command::revert);
 }

@@ -114,8 +114,7 @@ pub async fn runner_reset(db: &mut SqliteConnection, runner: &str) -> Status {
 
 
 async fn fetch_github_token(
-    owner: &str,
-    repo: &str,
+    org: &str,
     pat: &str,
     proxy: &str,
 ) -> Result<TokenResponse, reqwest::Error> {
@@ -126,8 +125,8 @@ async fn fetch_github_token(
         .build()?;
 
     let url = format!(
-        "https://api.github.com/repos/{}/{}/actions/runners/registration-token",
-        owner, repo
+        "https://api.github.com/orgs/{}/actions/runners/registration-token",
+        org
     );
     let response = client
         .post(&url)
@@ -148,12 +147,11 @@ pub async fn runner_return_github_token(
     runner: &str,
 ) -> Result<String, Status> {
     dotenv::dotenv().ok();
-    let owner = env::var("GITHUB_OWNER").ok();
-    let repo = env::var("GITHUB_REPO").ok();
+    let org = env::var("GITHUB_ORG").ok();
     let pat = env::var("GITHUB_PAT").ok();
     let proxy = env::var("PROXY_URL").ok();
 
-    if owner.is_none() || repo.is_none() || pat.is_none() || proxy.is_none() {
+    if org.is_none() || pat.is_none() || proxy.is_none() {
         eprintln!("Missing required environment variables");
         return Err(Status::InternalServerError);
     }
@@ -163,7 +161,7 @@ pub async fn runner_return_github_token(
         return Err(Status::BadRequest);
     }
 
-    let token = fetch_github_token(&owner.unwrap(), &repo.unwrap(), &pat.unwrap(), &proxy.unwrap()).await;
+    let token = fetch_github_token(&org.unwrap(), &pat.unwrap(), &proxy.unwrap()).await;
 
     match token {
         Ok(token) => {
