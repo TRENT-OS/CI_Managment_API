@@ -1,18 +1,26 @@
+//
+// Copyright (C) 2024, HENSOLDT Cyber GmbH
+//
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+// For commercial licensing, contact: info.cyber@hensoldt.net
+//
+
 use anyhow::Result;
-use rocket::serde::{Serialize, Deserialize};
-use rocket_db_pools::{sqlx::{self, SqliteConnection}, Database};
-use std::str::FromStr;
+use rocket::serde::{Deserialize, Serialize};
+use rocket_db_pools::{
+    sqlx::{self, SqliteConnection},
+    Database,
+};
 use rocket_okapi::okapi::{schemars, schemars::JsonSchema};
+use std::str::FromStr;
 use strum_macros::{AsRefStr, EnumString};
 
 use crate::{hardware, runners, timestamp};
 
-
-
 //------------------------------------------------------------------------------
 // Data Structures
 //------------------------------------------------------------------------------
-
 
 #[derive(Database)]
 #[database("runner_db")]
@@ -35,12 +43,9 @@ pub enum HardwareStatus {
     ERROR,
 }
 
-
-
 //------------------------------------------------------------------------------
 // Runner
 //------------------------------------------------------------------------------
-
 
 pub async fn runner_exists(db: &mut SqliteConnection, runner: &str) -> bool {
     1 == sqlx::query_as::<_, (i64,)>("SELECT EXISTS (SELECT 1 FROM RunnerVMs WHERE Id = ?)")
@@ -73,7 +78,6 @@ pub async fn update_runner_time_to_reset(
         .unwrap();
 }
 
-
 pub async fn runner_id_list(db: &mut SqliteConnection) -> Vec<String> {
     sqlx::query!("SELECT Id FROM RunnerVMs")
         .fetch_all(&mut *db)
@@ -84,11 +88,7 @@ pub async fn runner_id_list(db: &mut SqliteConnection) -> Vec<String> {
         .collect()
 }
 
-
-pub async fn get_runner_info(
-    db: &mut SqliteConnection,
-    runner: &str,
-) -> runners::RunnerInfo {
+pub async fn get_runner_info(db: &mut SqliteConnection, runner: &str) -> runners::RunnerInfo {
     let data = sqlx::query!(
         "SELECT Id, Status, TimeToReset FROM RunnerVMs WHERE Id = ?",
         runner
@@ -97,8 +97,8 @@ pub async fn get_runner_info(
     .await
     .unwrap();
 
-    let runner_status = RunnerStatus::from_str(&data.Status)
-        .expect("Invalid Hardware Status: Database Corruption");
+    let runner_status =
+        RunnerStatus::from_str(&data.Status).expect("Invalid Hardware Status: Database Corruption");
     let timestamp = if let Some(t) = data.TimeToReset {
         Some(timestamp::Timestamp::from(t))
     } else {
@@ -107,13 +107,9 @@ pub async fn get_runner_info(
     runners::RunnerInfo::new(data.Id, runner_status, timestamp)
 }
 
-
-
-
 //------------------------------------------------------------------------------
 // Hardware
 //------------------------------------------------------------------------------
-
 
 pub async fn hardware_exists(db: &mut SqliteConnection, hardware: &str) -> bool {
     1 == sqlx::query_as::<_, (i64,)>("SELECT EXISTS (SELECT 1 FROM Hardware WHERE Id = ?)")
@@ -137,16 +133,13 @@ pub async fn get_hardware_claimed_by_runner(
     db: &mut SqliteConnection,
     runner: &str,
 ) -> Vec<String> {
-    sqlx::query!(
-        "SELECT Id FROM Hardware WHERE ClaimedBy = ?",
-        runner
-    )
-    .fetch_all(db)
-    .await
-    .unwrap()
-    .into_iter()
-    .map(|rec| rec.Id)
-    .collect()
+    sqlx::query!("SELECT Id FROM Hardware WHERE ClaimedBy = ?", runner)
+        .fetch_all(db)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|rec| rec.Id)
+        .collect()
 }
 
 pub async fn update_hardware_status(

@@ -1,3 +1,12 @@
+//
+// Copyright (C) 2024, HENSOLDT Cyber GmbH
+// 
+// SPDX-License-Identifier: GPL-2.0-or-later
+//
+// For commercial licensing, contact: info.cyber@hensoldt.net
+//
+
+
 use rocket::{
     fairing::{Fairing, Info, Kind},
     tokio::time::{interval, Duration},
