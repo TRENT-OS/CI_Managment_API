@@ -4,6 +4,8 @@ use std::io;
 use strum_macros::AsRefStr;
 use std::{env, sync::LazyLock};
 
+use rocket::tokio::time::{sleep, Duration};
+
 
 
 //------------------------------------------------------------------------------
@@ -39,13 +41,18 @@ pub enum Command {
 //------------------------------------------------------------------------------
 
 
-fn touch(path: &path::Path) -> io::Result<()> {
-    println!("Creating vm command file at: {:?}", path);
+async fn touch(vm: String, command: Command) -> io::Result<()> {
+
+    let path = get_path(&vm, command);
+
+    sleep(Duration::from_secs(30)).await;
+
+    println!("Creating vm command file at: {:?}", &path);
     fs::OpenOptions::new()
         .create(true)
         .write(true)
         .truncate(true)
-        .open(path)?;
+        .open(&path)?;
     Ok(())
 }
 
@@ -61,24 +68,23 @@ fn get_path(vm: &str, command: Command) -> path::PathBuf {
 // VM CONTROL FUNCTIONS
 //------------------------------------------------------------------------------
 
-
-pub fn exec_command(vm: &str, command: Command) {
-    touch(&get_path(vm, command)).unwrap();
+pub async fn exec_command(vm: &str, command: Command) {
+    rocket::tokio::spawn(touch(vm.to_string(), command));
 }
 
 pub async fn start(runner: &str) {
-    exec_command(runner, Command::start);
+    exec_command(runner, Command::start).await;
 }
 
 
 pub async fn stop(runner: &str) {
-    exec_command(runner, Command::stop);
+    exec_command(runner, Command::stop).await;
 }
 
 pub async fn snapshot(runner: &str) {
-    exec_command(runner, Command::createsnap);
+    exec_command(runner, Command::createsnap).await;
 }
 
 pub async fn reset(runner: &str) {
-    exec_command(runner, Command::revert);
+    exec_command(runner, Command::revert).await;
 }

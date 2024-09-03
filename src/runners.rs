@@ -187,12 +187,14 @@ pub async fn vm_snapshot(mut db: Connection<db::RunnerDb>, runner: &str) -> Stat
     rocket::tokio::spawn(async move {
         db::update_runner_status(&mut db, &runner, db::RunnerStatus::RESETTING).await;
 
+        let timestamp = None;
+        db::update_runner_time_to_reset(&mut db, &runner, timestamp).await;
+
+        release_hardware(&mut db, &runner).await; // release all hardware claimed by runner
+
+
         vm::snapshot(&runner).await;
         println!("Snapshotting runner {}", runner);
-
-        std::thread::sleep(std::time::Duration::from_secs(20));
-    
-        runner_reset(&mut db, &runner).await;
     });
 
     return Status::Ok;
