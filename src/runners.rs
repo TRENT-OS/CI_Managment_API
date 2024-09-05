@@ -86,6 +86,11 @@ pub async fn runner_launch(db: &mut SqliteConnection, runner: &str) -> Status {
         return Status::NotFound;
     }
 
+    if db::get_runner_info(db, runner).await.time_to_reset.is_none() {
+        eprintln!("Runner is already running, reset first.");
+        return Status::Conflict;
+    }
+
     let timestamp = timestamp::Timestamp::new().chrono();
     db::update_runner_time_to_reset(db, runner, timestamp).await;
     db::update_runner_status(db, runner, db::RunnerStatus::IDLE).await;
