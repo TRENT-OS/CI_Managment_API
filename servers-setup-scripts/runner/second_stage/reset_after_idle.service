@@ -1,0 +1,11 @@
+[Unit]
+Description=If runner is idle and waiting one week for a job, reset the runner to update
+After=network.target
+
+[Service]
+ExecStartPre=/bin/sleep 604800  # Seconds of one week
+ExecStart=/usr/local/libexec/setup_second_stage/runner_reset.sh
+User=actions-service-user
+
+[Install]
+WantedBy=multi-user.target

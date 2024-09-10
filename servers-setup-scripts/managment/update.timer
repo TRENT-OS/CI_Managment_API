@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly System Update and Reboot Timer
+
+[Timer]
+OnCalendar=Sun 04:00
+Persistent=true
+Unit=update.service
+
+[Install]
+WantedBy=timers.target

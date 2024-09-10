@@ -1,0 +1,15 @@
+[Unit]
+Description=Setup Second Stage Service - Autostart configuration of GitHub actions-runner application
+After=network-online.target
+
+[Service]
+Type=simple
+User=actions-service-user
+Environment="HTTPS_PROXY=http://proxy.cc.ebs.corp:8080"
+Environment="NO_PROXY=localhost,127.0.0.1,10.178.169.36,downloads.haskell.org"
+ExecStart=/usr/local/libexec/setup_second_stage/exec.sh
+Restart=always
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target

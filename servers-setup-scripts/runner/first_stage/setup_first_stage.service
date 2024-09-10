@@ -1,0 +1,13 @@
+[Unit]
+Description=Setup First Stage Service - Updating
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/libexec/setup_first_stage/exec.sh
+Restart=on-failure
+RestartSec=120
+
+[Install]
+WantedBy=multi-user.target

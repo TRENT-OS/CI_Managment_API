@@ -1,0 +1,14 @@
+[Unit]
+Description=Runner Managment Api Service
+After=network-online.target
+
+[Service]
+Type=simple
+User=svc.trnt-managment@ac.ebs.corp
+Environment="ROCKET_ADDRESS=10.70.192.2"
+WorkingDirectory=/home/svc.trnt-managment@ac.ebs.corp/runner-managment-api
+ExecStart=/home/svc.trnt-managment@ac.ebs.corp/runner-managment-api/CI_Managment_API
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+[Unit]
+Description=System Update and Reboot
+
+[Service]
+User=root
+ExecStart=/usr/bin/bash -c 'apt update && apt -y upgrade && reboot'
+
+[Install]
+WantedBy=multi-user.target
